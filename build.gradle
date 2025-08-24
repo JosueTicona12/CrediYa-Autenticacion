@@ -33,5 +33,8 @@ sonar {
         property "sonar.externalIssuesReportPaths", "build/issues.json"
     }
 }
+dependencies {
+    runtimeOnly 'ch.qos.logback:logback-classic:1.5.13'
 
+}
 apply from: './main.gradle'

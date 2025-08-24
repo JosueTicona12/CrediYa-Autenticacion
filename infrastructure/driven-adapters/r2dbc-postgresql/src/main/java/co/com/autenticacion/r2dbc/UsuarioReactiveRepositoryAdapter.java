@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Usuario,
         UsuarioEntity,
-        String,
+        Long,
         UsuarioReactiveRepository
 > implements UsuarioRepository {
     public UsuarioReactiveRepositoryAdapter(UsuarioReactiveRepository repository, ObjectMapper mapper) {
@@ -33,11 +33,18 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<Usuario> findById(String id) {
-        return super.findById(id);
+    public Mono<Usuario> findById(Long id) {
+        return super.findById(id); // ya no conviertes a String
     }
+
     @Override
-    public Mono<Void> deleteById(String id) {
+    public Mono<Void> deleteById(Long id) {
         return super.repository.deleteById(id);
+    }
+
+    @Override
+    public Mono<Usuario> findByEmail(String email) {
+        return repository.findByEmail(email)
+                .map(entity -> mapper.map(entity, Usuario.class));
     }
 }

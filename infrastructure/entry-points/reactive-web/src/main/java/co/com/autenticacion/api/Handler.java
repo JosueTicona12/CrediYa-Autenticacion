@@ -1,67 +1,114 @@
 package co.com.autenticacion.api;
 
+import co.com.autenticacion.api.config.ErrorResponse;
+import co.com.autenticacion.api.config.SuccessResponse;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
+import exceptions.UsuarioDeleteException;
+import exceptions.UsuarioNotFoundException;
+import exceptions.UsuarioUpdateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class Handler {
-    //private  final UseCase useCase;
-//private  final UseCase2 useCase2;
+
     private final UsuarioUseCase usuarioUseCase;
 
-    public Mono<ServerResponse> listenSaveUsuario(ServerRequest serverRequest) {
+    public Mono<ServerResponse> listenSaveUsuario(ServerRequest request) {
         log.trace("Handler - Recibida petición de guardado para usuario");
-        return serverRequest.bodyToMono(Usuario.class)
+
+        return request.bodyToMono(Usuario.class)
                 .flatMap(usuarioUseCase::saveUser)
-                .flatMap(savedUsuario -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(savedUsuario));
+                .flatMap(u -> {
+                    SuccessResponse response = SuccessResponse.builder()
+                            .timestamp(LocalDateTime.now())
+                            .status(201)
+                            .message("Usuario creado correctamente")
+                            .build();
+                    return ServerResponse.status(201)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(response);
+                });
     }
 
-    public Mono<ServerResponse> listenUpdateUsuario(ServerRequest serverRequest) {
-        String id = serverRequest.pathVariable("id");
+    public Mono<ServerResponse> listenUpdateUsuario(ServerRequest request) {
+        String id = request.pathVariable("id");
         log.trace("Handler - Recibida petición de actualización para usuario con id={}", id);
-        return serverRequest.bodyToMono(Usuario.class)
-                .flatMap(usuario -> usuarioUseCase.updateUser(usuario,id))
-                .flatMap(updatedUsuario -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(updatedUsuario))
-                .switchIfEmpty(ServerResponse.notFound().build());
 
+        return request.bodyToMono(Usuario.class)
+                .flatMap(usuario -> usuarioUseCase.updateUser(usuario, Long.valueOf(id)))
+                .flatMap(u -> {
+                    SuccessResponse response = SuccessResponse.builder()
+                            .timestamp(LocalDateTime.now())
+                            .status(HttpStatus.OK.value())
+                            .message("Usuario actualizado correctamente")
+                            .build();
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(response);
+                })
+                .onErrorResume(UsuarioNotFoundException.class,
+                        e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request))
+                .onErrorResume(UsuarioUpdateException.class,
+                        e -> buildErrorResponse(HttpStatus.CONFLICT, e.getMessage(), request));
     }
 
-    public Mono<ServerResponse> listenGetAllUsuarios(ServerRequest serverRequest) {
+
+    public Mono<ServerResponse> listenGetAllUsuarios(ServerRequest request) {
         log.trace("Handler - Recibida petición de obtener todos los usuarios");
+
         return ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
-                .body(usuarioUseCase.getAllUsers(), Usuario.class);
+                .body(usuarioUseCase.getAllUsers(), Usuario.class)
+                .onErrorResume(Exception.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 
-    public Mono<ServerResponse> listenUsuarioById(ServerRequest serverRequest) {
+    public Mono<ServerResponse> listenUsuarioById(ServerRequest request) {
+        String id = request.pathVariable("id");
+        log.trace("Handler - Recibida petición de obtener usuario con id={}", id);
 
-        String id = serverRequest.pathVariable("id");
-        log.trace("Handler - Recibida petición de obtener para usuario con id={}", id);
-
-        return usuarioUseCase.getUserById(id)
+        return usuarioUseCase.getUserById(Long.valueOf(id))
                 .flatMap(usuario -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(usuario))
-                .switchIfEmpty(ServerResponse.notFound().build());
+                .onErrorResume(UsuarioNotFoundException.class,
+                        e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request));
     }
 
-    public Mono<ServerResponse> listenDeleteUsuario(ServerRequest serverRequest) {
-        String id = serverRequest.pathVariable("id");
+    public Mono<ServerResponse> listenDeleteUsuario(ServerRequest request) {
+        String id = request.pathVariable("id");
         log.trace("Handler - Recibida petición de eliminar usuario con id={}", id);
-        return usuarioUseCase.deleteUser(id)
-                .then(ServerResponse.noContent().build());
+
+        return usuarioUseCase.deleteUser(Long.valueOf(id))
+                .then(ServerResponse.noContent().build())
+                .onErrorResume(UsuarioNotFoundException.class,
+                        e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request))
+                .onErrorResume(UsuarioDeleteException.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
+    }
+
+    private Mono<ServerResponse> buildErrorResponse(HttpStatus status, String message, ServerRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(message)
+                .path(request.path())
+                .build();
+
+        return ServerResponse.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(error);
     }
 }

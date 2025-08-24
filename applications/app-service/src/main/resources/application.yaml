@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "CrediYa_Auth"
@@ -45,14 +45,8 @@ adapters:
     username: "postgres"
     password: "73657869"
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  api-docs:
-    path: /api-docs
-
 logging:
   level:
     root: INFO
-    co.com.autenticacion: TRACE  # tu paquete → nivel traza
-    org.springframework.r2dbc: DEBUG  # para ver consultas R2DBC
+    co.com.autenticacion: TRACE
+    org.springframework.r2dbc: DEBUG
