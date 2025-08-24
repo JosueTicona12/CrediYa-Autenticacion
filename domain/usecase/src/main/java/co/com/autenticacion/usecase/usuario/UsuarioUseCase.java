@@ -28,8 +28,8 @@ public class UsuarioUseCase {
         if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
             return Mono.error(new UsuarioValidationException("El correo electronico es obligatorio"));
         }
-        if (usuario.getSalario() == null || usuario.getSalario() <= 0) {
-            return Mono.error(new UsuarioValidationException("El salario base es obligatorio"));
+        if (usuario.getSalario() == null || (usuario.getSalario() <= 0 || usuario.getSalario() > 15000000)) {
+            return Mono.error(new UsuarioValidationException("El salario base esta vacio o fuera de rango numerico"));
         }
         return usuarioRepository.findByEmail(usuario.getEmail())
                 .flatMap(existing -> Mono.<Usuario>error(

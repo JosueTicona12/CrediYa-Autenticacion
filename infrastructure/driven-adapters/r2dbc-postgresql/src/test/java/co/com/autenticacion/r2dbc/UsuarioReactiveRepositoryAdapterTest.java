@@ -34,6 +34,10 @@ class UsuarioReactiveRepositoryAdapterTest {
             .numDocumento("73657869")
             .nacimiento(LocalDate.ofEpochDay(2000-6-15))
             .direccion("Calle ejemplo 123")
+            .telefono("123456789")
+            .email("correo123@hotmail.com")
+            .salario(3500)
+            .rolId(1L)
             .build();
 
     private final Usuario usuario = Usuario.builder()
@@ -43,6 +47,10 @@ class UsuarioReactiveRepositoryAdapterTest {
             .numDocumento("73657869")
             .nacimiento(LocalDate.ofEpochDay(2000-6-15))
             .direccion("Calle ejemplo 123")
+            .telefono("123456789")
+            .email("correo123@hotmail.com")
+            .salario(3500)
+            .rolId(1L)
             .build();
     private final Usuario otherUsuario = Usuario.builder()
             .id(2L)
@@ -51,26 +59,28 @@ class UsuarioReactiveRepositoryAdapterTest {
             .numDocumento("73657869")
             .nacimiento(LocalDate.ofEpochDay(2000-6-15))
             .direccion("Calle ejemplo 123")
+            .telefono("123456789")
+            .email("correo123@hotmail.com")
+            .salario(3500)
+            .rolId(1L)
             .build();
 
     @Test
     void shouldFindUserById() {
-
-        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
-
         when(repository.findById(1L)).thenReturn(Mono.just(usuarioEntity));
+        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
 
         Mono<Usuario> result = repositoryAdapter.findById(1L);
 
         StepVerifier.create(result)
-                .expectNextMatches(t -> t.getId().equals(1L) && t.getNombres().equals("Juan") && t.getApellidos().equals("Perez"))
+                .expectNextMatches(u -> u.getId().equals(1L) && u.getNombres().equals("Juan"))
                 .verifyComplete();
     }
 
     @Test
-    void shouldFindAllTask() {
-        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
+    void shouldFindAllUsers() {
         when(repository.findAll()).thenReturn(Flux.just(usuarioEntity));
+        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
 
         Flux<Usuario> result = repositoryAdapter.findAll();
 
@@ -80,10 +90,10 @@ class UsuarioReactiveRepositoryAdapterTest {
     }
 
     @Test
-    void shouldSaveTask() {
-        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
+    void shouldSaveUser() {
         when(mapper.map(usuario, UsuarioEntity.class)).thenReturn(usuarioEntity);
         when(repository.save(usuarioEntity)).thenReturn(Mono.just(usuarioEntity));
+        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
 
         Mono<Usuario> result = repositoryAdapter.save(usuario);
 
@@ -98,9 +108,7 @@ class UsuarioReactiveRepositoryAdapterTest {
 
         Mono<Void> result = repositoryAdapter.deleteById(1L);
 
-        StepVerifier.create(result)
-                .verifyComplete();
-
+        StepVerifier.create(result).verifyComplete();
         verify(repository, times(1)).deleteById(1L);
     }
 
@@ -110,7 +118,27 @@ class UsuarioReactiveRepositoryAdapterTest {
 
         Mono<Usuario> result = repositoryAdapter.findById(99L);
 
+        StepVerifier.create(result).verifyComplete();
+    }
+
+    @Test
+    void shouldFindUserByEmail() {
+        when(repository.findByEmail("correo123@hotmail.com")).thenReturn(Mono.just(usuarioEntity));
+        when(mapper.map(usuarioEntity, Usuario.class)).thenReturn(usuario);
+
+        Mono<Usuario> result = repositoryAdapter.findByEmail("correo123@hotmail.com");
+
         StepVerifier.create(result)
+                .expectNext(usuario)
                 .verifyComplete();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenEmailNotFound() {
+        when(repository.findByEmail("noexiste@mail.com")).thenReturn(Mono.empty());
+
+        Mono<Usuario> result = repositoryAdapter.findByEmail("noexiste@mail.com");
+
+        StepVerifier.create(result).verifyComplete();
     }
 }
