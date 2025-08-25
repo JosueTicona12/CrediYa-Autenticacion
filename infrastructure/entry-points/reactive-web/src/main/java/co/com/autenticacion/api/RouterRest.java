@@ -2,6 +2,7 @@ package co.com.autenticacion.api;
 
 import co.com.autenticacion.api.config.UsuarioPath;
 import co.com.autenticacion.model.usuario.Usuario;
+import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,8 +10,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -23,13 +27,19 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @RequiredArgsConstructor
 public class RouterRest {
 
+    @Autowired
+    private WebTestClient webTestClient;
+
+    @MockitoBean
+    private UsuarioUseCase usuarioUseCase;
+
     private final UsuarioPath usuarioPath;
     private final Handler usuarioHandler;
 
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/usuarios", // usuarioPath.getUsuarios() se aplica en runtime
+                    path = "/usuarios",
                     method = RequestMethod.POST,
                     beanClass = Handler.class,
                     beanMethod = "listenSaveUsuario",
@@ -44,7 +54,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/usuarios/{id}", // usuarioPath.getUsuariosById()
+                    path = "/usuarios/{id}",
                     method = RequestMethod.PUT,
                     beanClass = Handler.class,
                     beanMethod = "listenUpdateUsuario",

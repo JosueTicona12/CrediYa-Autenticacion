@@ -1,0 +1,4 @@
+routes:
+  paths:
+    tasks: "/api/v1/usuarios"
+    tasksById: "/api/v1/usuarios/{id}"
