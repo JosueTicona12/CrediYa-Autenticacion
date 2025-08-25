@@ -2,19 +2,21 @@ package co.com.autenticacion.api;
 
 import co.com.autenticacion.api.config.UsuarioPath;
 import co.com.autenticacion.model.usuario.Usuario;
-import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.reactive.server.WebTestClient;
+
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -26,12 +28,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 @RequiredArgsConstructor
 public class RouterRest {
-
-    @Autowired
-    private WebTestClient webTestClient;
-
-    @MockitoBean
-    private UsuarioUseCase usuarioUseCase;
 
     private final UsuarioPath usuarioPath;
     private final Handler usuarioHandler;
@@ -46,6 +42,11 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "saveUsuario",
                             summary = "Crea un nuevo usuario",
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    description = "Datos del usuario a crear",
+                                    content = @Content(schema = @Schema(implementation = Usuario.class))
+                            ),
                             responses = @ApiResponse(
                                     responseCode = "200",
                                     description = "Usuario creado",
@@ -61,6 +62,20 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "updateUsuario",
                             summary = "Actualiza un usuario existente",
+                            parameters = {
+                                    @Parameter(
+                                            name = "id",
+                                            description = "ID del usuario a actualizar",
+                                            required = true,
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "long")
+                                    )
+                            },
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    description = "Datos actualizados del usuario",
+                                    content = @Content(schema = @Schema(implementation = Usuario.class))
+                            ),
                             responses = @ApiResponse(
                                     responseCode = "200",
                                     description = "Usuario actualizado",
@@ -76,6 +91,15 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "deleteUsuario",
                             summary = "Elimina un usuario por id",
+                            parameters = {
+                                    @Parameter(
+                                            name = "id",
+                                            description = "ID del usuario a eliminar",
+                                            required = true,
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "long")
+                                    )
+                            },
                             responses = @ApiResponse(responseCode = "204", description = "Usuario eliminado")
                     )
             ),
@@ -90,7 +114,7 @@ public class RouterRest {
                             responses = @ApiResponse(
                                     responseCode = "200",
                                     description = "Lista de usuarios",
-                                    content = @Content(schema = @Schema(implementation = Usuario.class))
+                                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))
                             )
                     )
             ),
@@ -102,6 +126,15 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "getUsuarioById",
                             summary = "Obtiene un usuario por id",
+                            parameters = {
+                                    @Parameter(
+                                            name = "id",
+                                            description = "ID del usuario a consultar",
+                                            required = true,
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "long")
+                                    )
+                            },
                             responses = {
                                     @ApiResponse(
                                             responseCode = "200",
@@ -113,6 +146,7 @@ public class RouterRest {
                     )
             )
     })
+
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST(usuarioPath.getUsuarios()), usuarioHandler::listenSaveUsuario)
                 .andRoute(PUT(usuarioPath.getUsuariosById()), usuarioHandler::listenUpdateUsuario)

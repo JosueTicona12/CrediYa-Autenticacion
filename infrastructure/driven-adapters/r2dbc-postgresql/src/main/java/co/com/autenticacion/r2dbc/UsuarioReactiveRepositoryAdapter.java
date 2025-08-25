@@ -34,7 +34,7 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<Usuario> findById(Long id) {
-        return super.findById(id); // ya no conviertes a String
+        return super.findById(id);
     }
 
     @Override
