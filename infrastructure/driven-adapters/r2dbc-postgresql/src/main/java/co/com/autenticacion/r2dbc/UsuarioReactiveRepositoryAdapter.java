@@ -47,4 +47,10 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         return repository.findByEmail(email)
                 .map(entity -> mapper.map(entity, Usuario.class));
     }
+
+    @Override
+    public Flux<Usuario> findByActivo(Integer activo) {
+        return repository.findByActivo(activo)
+                .map(entity -> mapper.map(entity, Usuario.class));
+    }
 }

@@ -31,6 +31,7 @@ public class UsuarioUseCase {
         if (usuario.getSalario() == null || (usuario.getSalario() <= 0 || usuario.getSalario() > 15000000)) {
             return Mono.error(new UsuarioValidationException("El salario base esta vacio o fuera de rango numerico"));
         }
+        usuario.setActivo(1L);
         return usuarioRepository.findByEmail(usuario.getEmail())
                 .flatMap(existing -> Mono.<Usuario>error(
                         new UsuarioException("Ya existe un usuario registrado con el email: " + usuario.getEmail())
@@ -88,7 +89,7 @@ public class UsuarioUseCase {
                 .doOnError(e -> log.severe("Error buscando usuario con id {" + id + "}: " + e)); }
 
     public Mono<Void> deleteUser(Long id) {
-        log.info("UseCase - Eliminando usuario con id {" + id + "}");
+        log.info("UseCase - Eliminando (soft delete) usuario con id {" + id + "}");
 
         if (id == null) {
             return Mono.error(new UsuarioValidationException("El id no puede ser nulo"));
@@ -96,12 +97,16 @@ public class UsuarioUseCase {
 
         return usuarioRepository.findById(id)
                 .switchIfEmpty(Mono.error(new UsuarioNotFoundException(id)))
-                .flatMap(existing -> usuarioRepository.deleteById(id))
-                .doOnSuccess(v -> log.info("Usuario eliminado con id {" + id + "}"))
+                .flatMap(existing -> {
+                    existing.setActivo(0L);
+                    return usuarioRepository.save(existing);
+                })
+                .doOnSuccess(u -> log.info("Usuario marcado como inactivo con id {" + id + "}"))
                 .doOnError(e -> {
-                    log.severe("Error eliminando usuario con id {" + id +"}: " + e);
+                    log.severe("Error al marcar usuario como inactivo con id {" + id + "}: " + e);
                     throw new UsuarioDeleteException(id);
-                });
+                })
+                .then();
     }
 
     public Mono<Usuario> findByEmail(String email) {

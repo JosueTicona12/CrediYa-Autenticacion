@@ -41,4 +41,6 @@ public class UsuarioEntity {
 
     @Column("id_rol") // FK a la tabla Rol
     private Long rolId;
+
+    private Long activo;
 }

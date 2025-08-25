@@ -20,6 +20,7 @@ public class Usuario {
     private String email;
     private Integer salario;
     private Long rolId;
+    private Long activo;
 
 
 }

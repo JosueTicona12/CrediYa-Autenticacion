@@ -10,4 +10,5 @@ public interface UsuarioRepository {
     Mono<Usuario> findById(Long id);
     Mono<Void> deleteById(Long id);
     Mono<Usuario> findByEmail(String email);
+    Flux<Usuario> findByActivo(Integer activo);
 }
