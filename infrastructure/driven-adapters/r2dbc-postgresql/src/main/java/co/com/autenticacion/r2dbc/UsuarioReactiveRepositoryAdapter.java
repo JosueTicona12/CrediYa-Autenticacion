@@ -49,6 +49,12 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
+    public Mono<Usuario> findByNumDocumento(String numDocumento) {
+        return repository.findByNumDocumentoAndActivo(numDocumento, 1L)
+                .map(entity -> mapper.map(entity, Usuario.class));
+    }
+
+    @Override
     public Flux<Usuario> findByActivo(Integer activo) {
         return repository.findByActivo(activo)
                 .map(entity -> mapper.map(entity, Usuario.class));

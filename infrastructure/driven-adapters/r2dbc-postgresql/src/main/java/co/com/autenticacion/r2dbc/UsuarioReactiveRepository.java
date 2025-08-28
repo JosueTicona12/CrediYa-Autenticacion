@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 public interface UsuarioReactiveRepository extends ReactiveCrudRepository<UsuarioEntity, Long>, ReactiveQueryByExampleExecutor<UsuarioEntity> {
     Mono<UsuarioEntity> findByEmail(String email);
     Flux<Usuario> findByActivo(Integer activo);
+    Mono<UsuarioEntity> findByNumDocumentoAndActivo(String numDocumento, Long activo);
 
 
 }

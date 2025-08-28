@@ -7,6 +7,7 @@ import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import exceptions.UsuarioDeleteException;
 import exceptions.UsuarioNotFoundException;
 import exceptions.UsuarioUpdateException;
+import exceptions.UsuarioValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -33,10 +35,10 @@ public class Handler {
                 .flatMap(u -> {
                     SuccessResponse response = SuccessResponse.builder()
                             .timestamp(LocalDateTime.now())
-                            .status(201)
+                            .status(200)
                             .message("Usuario creado correctamente")
                             .build();
-                    return ServerResponse.status(201)
+                    return ServerResponse.status(200)
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(response);
                 });
@@ -85,6 +87,24 @@ public class Handler {
                         .bodyValue(usuario))
                 .onErrorResume(UsuarioNotFoundException.class,
                         e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request));
+    }
+
+    public Mono<ServerResponse> listenUsuarioByNumDoc(ServerRequest request) {
+        String numDoc = request.pathVariable("numDocumento");
+        log.trace("Handler - Recibida petición de obtener usuario con numDocumento={}", numDoc);
+
+        return usuarioUseCase.findByNumDoc(numDoc)
+                .flatMap(u -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(u))
+                .onErrorResume(UsuarioNotFoundException.class,
+                        e -> ServerResponse.status(HttpStatus.NOT_FOUND)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Map.of("error", e.getMessage())))
+                .onErrorResume(UsuarioValidationException.class,
+                        e -> ServerResponse.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Map.of("error", e.getMessage())));
     }
 
     public Mono<ServerResponse> listenDeleteUsuario(ServerRequest request) {

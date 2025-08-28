@@ -31,6 +31,7 @@ public class RouterRest {
 
     private final UsuarioPath usuarioPath;
     private final Handler usuarioHandler;
+    public static final String USUARIOS_BY_DOCUMENTO = "/api/v1/usuarios/by-documento/{numDocumento}";
 
     @Bean
     @RouterOperations({
@@ -144,7 +145,30 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = USUARIOS_BY_DOCUMENTO,
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "listenUsuarioByDocumento",
+                    operation = @Operation(
+                            operationId = "getUsuarioByDocumento",
+                            summary = "Obtiene un usuario activo por número de documento",
+                            parameters = @Parameter(
+                                    name = "numDocumento",
+                                    in = ParameterIn.PATH,
+                                    description = "Número de documento del usuario",
+                                    required = true,
+                                    schema = @Schema(type = "string")
+                            ),
+                            responses = {
+                                    @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+                                            content = @Content(schema = @Schema(implementation = Usuario.class))),
+                                    @ApiResponse(responseCode = "400", description = "Documento inválido"),
+                                    @ApiResponse(responseCode = "404", description = "Usuario no encontrado o inactivo")
+                    }
             )
+    )
     })
 
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
@@ -152,6 +176,7 @@ public class RouterRest {
                 .andRoute(PUT(usuarioPath.getUsuariosById()), usuarioHandler::listenUpdateUsuario)
                 .andRoute(DELETE(usuarioPath.getUsuariosById()), usuarioHandler::listenDeleteUsuario)
                 .andRoute(GET(usuarioPath.getUsuarios()), usuarioHandler::listenGetAllUsuarios)
-                .andRoute(GET(usuarioPath.getUsuariosById()), usuarioHandler::listenUsuarioById);
+                .andRoute(GET(usuarioPath.getUsuariosById()), usuarioHandler::listenUsuarioById)
+                .andRoute(GET(USUARIOS_BY_DOCUMENTO), usuarioHandler::listenUsuarioByNumDoc);
     }
 }

@@ -31,14 +31,31 @@ public class UsuarioUseCase {
         if (usuario.getSalario() == null || (usuario.getSalario() <= 0 || usuario.getSalario() > 15000000)) {
             return Mono.error(new UsuarioValidationException("El salario base esta vacio o fuera de rango numerico"));
         }
+        if (usuario.getNumDocumento() == null || usuario.getNumDocumento().isBlank()) {
+            return Mono.error(new UsuarioValidationException("El número de documento es obligatorio"));
+        }
         usuario.setActivo(1L);
-        return usuarioRepository.findByEmail(usuario.getEmail())
+        final String email = usuario.getEmail().trim().toLowerCase();
+        final String numDocumento = usuario.getNumDocumento().trim();
+        usuario.setEmail(email);
+        usuario.setNumDocumento(numDocumento);
+        usuario.setActivo(1L);
+        return usuarioRepository.findByEmail(email)
                 .flatMap(existing -> Mono.<Usuario>error(
-                        new UsuarioException("Ya existe un usuario registrado con el email: " + usuario.getEmail())
+                        new UsuarioException("Ya existe un usuario registrado con el email: " + email)
                 ))
-                .switchIfEmpty(usuarioRepository.save(usuario)) // si no existe, lo guarda
+                .switchIfEmpty(
+                        usuarioRepository.findByNumDocumento(numDocumento)
+                                .flatMap(existing -> Mono.<Usuario>error(
+                                        new UsuarioException("Ya existe un usuario registrado con el documento: " + numDocumento)
+                                ))
+                                .switchIfEmpty(
+                                        // 3) Si tampoco existe el documento → guardar
+                                        usuarioRepository.save(usuario)
+                                )
+                )
                 .doOnSuccess(u -> log.info("Usuario guardado con éxito"))
-                .doOnError(e -> log.severe("Error guardando usuario: {}" + e.getMessage()));
+                .doOnError(e -> log.severe("Error guardando usuario: " + e.getMessage()));
     }
 
     public Mono<Usuario> updateUser(Usuario usuario, Long id) {
@@ -98,6 +115,9 @@ public class UsuarioUseCase {
         return usuarioRepository.findById(id)
                 .switchIfEmpty(Mono.error(new UsuarioNotFoundException(id)))
                 .flatMap(existing -> {
+                    if (existing == null) { // aunque en Reactor nunca debería llegar null aquí
+                        return Mono.error(new UsuarioNotFoundException(id));
+                    }
                     existing.setActivo(0L);
                     return usuarioRepository.save(existing);
                 })
@@ -115,5 +135,14 @@ public class UsuarioUseCase {
                 .switchIfEmpty(Mono.error(new UsuarioException("El campo email esta vacio" + email)))
                 .doOnSuccess(u -> log.info("Usuario encontrado: {" + u + "}"))
                 .doOnError(e -> log.severe("Error buscando usuario con email {" + email + "}: " + e));
+    }
+
+    public Mono<Usuario> findByNumDoc(String numDocumento) {
+        log.info("UseCase - Busqueda de Id por correo");
+        return usuarioRepository.findByNumDocumento(numDocumento)
+                .filter(u -> u.getActivo() != null && u.getActivo() == 1L)
+                .switchIfEmpty(Mono.error(new UsuarioException("No existe usuario activo con documento ingersado")))
+                .doOnSuccess(u -> log.info("Usuario encontrado {" + u.getId() + "}"))
+                .doOnError(e -> log.severe("Error buscando por documento {" + numDocumento + "}: " + e.getMessage()));
     }
 }
