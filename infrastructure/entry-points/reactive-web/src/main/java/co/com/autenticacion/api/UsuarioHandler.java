@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import static co.com.autenticacion.usecase.usuario.utils.UsuarioLogEnum.*;
+import exceptions.UsuarioException;
+
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -28,7 +31,7 @@ public class UsuarioHandler {
     private final UsuarioUseCase usuarioUseCase;
 
     public Mono<ServerResponse> listenSaveUsuario(ServerRequest request) {
-        log.trace("Handler - Recibida petición de guardado para usuario");
+        log.trace(HANDLER_SAVE_REQUEST.getMessage());
 
         return request.principal()
                 .cast(org.springframework.security.core.Authentication.class)
@@ -51,12 +54,18 @@ public class UsuarioHandler {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .bodyValue(response);
                             });
-                });
+                })
+                .onErrorResume(UsuarioValidationException.class,
+                        e -> buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), request))
+                .onErrorResume(UsuarioException.class,
+                        e -> buildErrorResponse(HttpStatus.CONFLICT, e.getMessage(), request))
+                .onErrorResume(Exception.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 
     public Mono<ServerResponse> listenUpdateUsuario(ServerRequest request) {
         String id = request.pathVariable("id");
-        log.trace("Handler - Recibida petición de actualización para usuario con id={}", id);
+        log.trace(HANDLER_UPDATE_REQUEST.getMessage(), id);
 
         return request.bodyToMono(Usuario.class)
                 .flatMap(usuario -> usuarioUseCase.updateUser(usuario, Long.valueOf(id)))
@@ -73,13 +82,16 @@ public class UsuarioHandler {
                 .onErrorResume(UsuarioNotFoundException.class,
                         e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request))
                 .onErrorResume(UsuarioUpdateException.class,
-                        e -> buildErrorResponse(HttpStatus.CONFLICT, e.getMessage(), request));
+                        e -> buildErrorResponse(HttpStatus.CONFLICT, e.getMessage(), request))
+                .onErrorResume(UsuarioValidationException.class,
+                        e -> buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), request))
+                .onErrorResume(Exception.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 
 
     public Mono<ServerResponse> listenGetAllUsuarios(ServerRequest request) {
-        log.trace("Handler - Recibida petición de obtener todos los usuarios");
-
+        log.trace(HANDLER_GET_ALL_REQUEST.getMessage());
         return ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(usuarioUseCase.getAllUsers(), Usuario.class)
@@ -89,19 +101,21 @@ public class UsuarioHandler {
 
     public Mono<ServerResponse> listenUsuarioById(ServerRequest request) {
         String id = request.pathVariable("id");
-        log.trace("Handler - Recibida petición de obtener usuario con id={}", id);
+        log.trace(HANDLER_GET_BY_ID_REQUEST.getMessage(), id);
 
         return usuarioUseCase.getUserById(Long.valueOf(id))
                 .flatMap(usuario -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(usuario))
                 .onErrorResume(UsuarioNotFoundException.class,
-                        e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request));
+                        e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request))
+                .onErrorResume(Exception.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 
     public Mono<ServerResponse> listenUsuarioByNumDoc(ServerRequest request) {
         String numDoc = request.pathVariable("numDocumento");
-        log.trace("Handler - Recibida petición de obtener usuario con numDocumento={}", numDoc);
+        log.trace(HANDLER_GET_BY_NUMDOC_REQUEST.getMessage(), numDoc);
 
         return usuarioUseCase.findByNumDoc(numDoc)
                 .flatMap(u -> ServerResponse.ok()
@@ -114,18 +128,22 @@ public class UsuarioHandler {
                 .onErrorResume(UsuarioValidationException.class,
                         e -> ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(Map.of("error", e.getMessage())));
+                                .bodyValue(Map.of("error", e.getMessage())))
+                .onErrorResume(Exception.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 
     public Mono<ServerResponse> listenDeleteUsuario(ServerRequest request) {
         String id = request.pathVariable("id");
-        log.trace("Handler - Recibida petición de eliminar usuario con id={}", id);
+        log.trace(HANDLER_DELETE_REQUEST.getMessage(), id);
 
         return usuarioUseCase.deleteUser(Long.valueOf(id))
                 .then(ServerResponse.noContent().build())
                 .onErrorResume(UsuarioNotFoundException.class,
                         e -> buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage(), request))
                 .onErrorResume(UsuarioDeleteException.class,
+                        e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request))
+                .onErrorResume(Exception.class,
                         e -> buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request));
     }
 

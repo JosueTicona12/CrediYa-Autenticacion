@@ -7,32 +7,41 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import static co.com.autenticacion.usecase.usuario.utils.UsuarioLogEnum.*;
+
 
 @Log
 @RequiredArgsConstructor
 public class UsuarioUseCase {
     private final UsuarioRepository usuarioRepository;
 
+
     public Mono<Usuario> saveUser(Usuario usuario) {
-        log.info("UseCase - Guardando usuario");
+        log.info(SAVE_USER.getMessage());
 
         if (usuario == null) {
-            return Mono.error(new UsuarioValidationException("El usuario no puede ser nulo"));
+            log.warning(USER_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(USER_REQUIRED.getMessage()));
         }
         if (usuario.getNombres() == null || usuario.getNombres().isBlank()) {
-            return Mono.error(new UsuarioValidationException("El nombre es obligatorio"));
+            log.warning(NAME_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(NAME_REQUIRED.getMessage()));
         }
         if (usuario.getApellidos() == null || usuario.getApellidos().isBlank()) {
-            return Mono.error(new UsuarioValidationException("El apellido es obligatorio"));
+            log.warning(LASTNAME_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(LASTNAME_REQUIRED.getMessage()));
         }
         if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
-            return Mono.error(new UsuarioValidationException("El correo electronico es obligatorio"));
+            log.warning(EMAIL_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(EMAIL_REQUIRED.getMessage()));
         }
         if (usuario.getSalario() == null || (usuario.getSalario() <= 0 || usuario.getSalario() > 15000000)) {
-            return Mono.error(new UsuarioValidationException("El salario base esta vacio o fuera de rango numerico"));
+            log.warning(SALARY_INVALID.getMessage());
+            return Mono.error(new UsuarioValidationException(SALARY_INVALID.getMessage()));
         }
         if (usuario.getNumDocumento() == null || usuario.getNumDocumento().isBlank()) {
-            return Mono.error(new UsuarioValidationException("El número de documento es obligatorio"));
+            log.warning(NUMDOC_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(NUMDOC_REQUIRED.getMessage()));
         }
         usuario.setActivo(1L);
         final String email = usuario.getEmail().trim().toLowerCase();
@@ -54,19 +63,22 @@ public class UsuarioUseCase {
                                         usuarioRepository.save(usuario)
                                 )
                 )
-                .doOnSuccess(u -> log.info("Usuario guardado con éxito"))
-                .doOnError(e -> log.severe("Error guardando usuario: " + e.getMessage()));
+                .doOnSuccess(u -> log.info(SAVE_USER_SUCCESS.getMessage()))
+                .doOnError(e -> log.severe(ERROR_SAVE_USER.getMessage() + e.getMessage()));
     }
 
     public Mono<Usuario> updateUser(Usuario usuario, Long id) {
 
-        log.info("UseCase - Actualizando usuario con id {}");
+        log.info(UPDATE_USER.getMessage() + id);
+
 
         if (id == null) {
-            return Mono.error(new UsuarioValidationException("El id no puede ser nulo"));
+            log.warning(ID_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(ID_REQUIRED.getMessage()));
         }
         if (usuario == null) {
-            return Mono.error(new UsuarioValidationException("El usuario no puede ser nulo"));
+            log.warning(USER_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(USER_REQUIRED.getMessage()));
         }
 
         return usuarioRepository.findById(id)
@@ -82,34 +94,38 @@ public class UsuarioUseCase {
                     return usuarioRepository.save(existing);
                 })
                 .switchIfEmpty(Mono.error(new UsuarioUpdateException(id)))
-                .doOnSuccess(u -> log.info("Usuario actualizado: {" + id + "}"))
-                .doOnError(e -> log.severe("Error actualizando usuario con id {" + id + "}"));
+                .doOnSuccess(u -> log.info(UPDATE_USER_SUCCESS.getMessage() + id))
+                .doOnError(e -> log.severe(ERROR_UPDATE_USER.getMessage() + id));
     }
 
-    public Flux<Usuario> getAllUsers() { log.info("UseCase - Buscar todos los usuarios");
+    public Flux<Usuario> getAllUsers() {
+        log.info(GET_ALL_USERS.getMessage());
 
         return usuarioRepository.findAll()
                 .switchIfEmpty(Flux.error(new UsuarioException("No se encontraron usuarios")))
-                .doOnComplete(() -> log.info("Consulta de usuarios completada"))
-                .doOnError(e -> log.severe("Error consultando todos los usuarios: " + e)); }
+                .doOnComplete(() -> log.info(GET_ALL_USERS_COMPLETE.getMessage()))
+                .doOnError(e -> log.severe(ERROR_GET_ALL_USERS.getMessage() + e));
+    }
 
     public Mono<Usuario> getUserById(Long id) {
-        log.info("UseCase - Buscar usuario por id {}" + id);
+        log.info(GET_USER_BY_ID.getMessage() + id);
 
         if (id == null) {
-            return Mono.error(new UsuarioValidationException("El id no puede ser nulo"));
+            log.warning(ID_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(ID_REQUIRED.getMessage()));
         }
 
         return usuarioRepository.findById(id)
                 .switchIfEmpty(Mono.error(new UsuarioNotFoundException(id)))
-                .doOnSuccess(u -> log.info("Usuario encontrado: {}" + u))
-                .doOnError(e -> log.severe("Error buscando usuario con id {" + id + "}: " + e)); }
+                .doOnSuccess(u -> log.info(USER_FOUND.getMessage() + u))
+                .doOnError(e -> log.severe(ERROR_GET_USER_BY_ID.getMessage() + id + ": " + e));
+    }
 
     public Mono<Void> deleteUser(Long id) {
-        log.info("UseCase - Eliminando (soft delete) usuario con id {" + id + "}");
-
+        log.info(DELETE_USER.getMessage() + id);
         if (id == null) {
-            return Mono.error(new UsuarioValidationException("El id no puede ser nulo"));
+            log.warning(ID_REQUIRED.getMessage());
+            return Mono.error(new UsuarioValidationException(ID_REQUIRED.getMessage()));
         }
 
         return usuarioRepository.findById(id)
@@ -121,28 +137,28 @@ public class UsuarioUseCase {
                     existing.setActivo(0L);
                     return usuarioRepository.save(existing);
                 })
-                .doOnSuccess(u -> log.info("Usuario marcado como inactivo con id {" + id + "}"))
+                .doOnSuccess(u -> log.info(DELETE_USER_SUCCESS.getMessage() + id))
                 .doOnError(e -> {
-                    log.severe("Error al marcar usuario como inactivo con id {" + id + "}: " + e);
+                    log.severe(ERROR_DELETE_USER.getMessage() + id + ": " + e);
                     throw new UsuarioDeleteException(id);
                 })
                 .then();
     }
 
     public Mono<Usuario> findByEmail(String email) {
-        log.info("UseCase - Busqueda de Id por correo");
+        log.info(FIND_BY_EMAIL.getMessage());
         return usuarioRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new UsuarioException("El campo email esta vacio" + email)))
-                .doOnSuccess(u -> log.info("Usuario encontrado: {" + u + "}"))
-                .doOnError(e -> log.severe("Error buscando usuario con email {" + email + "}: " + e));
+                .doOnSuccess(u -> log.info(USER_FOUND.getMessage() + u))
+                .doOnError(e -> log.severe(ERROR_FIND_BY_EMAIL.getMessage() + email + ": " + e));
     }
 
     public Mono<Usuario> findByNumDoc(String numDocumento) {
-        log.info("UseCase - Busqueda de Id por correo");
+        log.info(FIND_BY_NUMDOC.getMessage());
         return usuarioRepository.findByNumDocumento(numDocumento)
                 .filter(u -> u.getActivo() != null && u.getActivo() == 1L)
                 .switchIfEmpty(Mono.error(new UsuarioException("No existe usuario activo con documento ingersado")))
-                .doOnSuccess(u -> log.info("Usuario encontrado {" + u.getId() + "}"))
-                .doOnError(e -> log.severe("Error buscando por documento {" + numDocumento + "}: " + e.getMessage()));
+                .doOnSuccess(u -> log.info(USER_FOUND.getMessage() + u.getId()))
+                .doOnError(e -> log.severe(ERROR_FIND_BY_NUMDOC.getMessage() + numDocumento + ": " + e.getMessage()));
     }
 }
