@@ -3,6 +3,7 @@ package co.com.autenticacion.r2dbc;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.model.usuario.gateways.UsuarioRepository;
 import co.com.autenticacion.r2dbc.entity.UsuarioEntity;
+import co.com.autenticacion.r2dbc.helper.PasswordHasher;
 import co.com.autenticacion.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
 public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Usuario,
         UsuarioEntity,
-        String,
+        Long,
         UsuarioReactiveRepository
 > implements UsuarioRepository {
     public UsuarioReactiveRepositoryAdapter(UsuarioReactiveRepository repository, ObjectMapper mapper) {
@@ -24,6 +25,9 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<Usuario> save(Usuario usuario) {
+        if (usuario.getPassword() != null && !usuario.getPassword().isBlank()) {
+            usuario.setPassword(PasswordHasher.hash(usuario.getPassword()));
+        }
         return super.save(usuario);
     }
 
@@ -33,11 +37,30 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<Usuario> findById(String id) {
+    public Mono<Usuario> findById(Long id) {
         return super.findById(id);
     }
+
     @Override
-    public Mono<Void> deleteById(String id) {
+    public Mono<Void> deleteById(Long id) {
         return super.repository.deleteById(id);
+    }
+
+    @Override
+    public Mono<Usuario> findByEmail(String email) {
+        return repository.findByEmail(email)
+                .map(entity -> mapper.map(entity, Usuario.class));
+    }
+
+    @Override
+    public Mono<Usuario> findByNumDocumento(String numDocumento) {
+        return repository.findByNumDocumentoAndActivo(numDocumento, 1L)
+                .map(entity -> mapper.map(entity, Usuario.class));
+    }
+
+    @Override
+    public Flux<Usuario> findByActivo(Integer activo) {
+        return repository.findByActivo(activo)
+                .map(entity -> mapper.map(entity, Usuario.class));
     }
 }

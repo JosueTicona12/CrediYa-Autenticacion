@@ -1,6 +1,7 @@
 package co.com.autenticacion.model.usuario;
 import lombok.*;
-//import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 
 @Getter
@@ -9,12 +10,19 @@ import lombok.*;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Usuario {
-    private String id;
-    private String nombre;
-    private String apellido;
-    private Integer edad;
-    private Integer tipoId;
-    private Long numeroId;
+    private Long id;
+    private String nombres;
+    private String apellidos;
+    private String numDocumento;
+    private LocalDate nacimiento;
+    private String direccion;
+    private String telefono;
+    private String email;
+    private Integer salario;
+    private Long rolId;
+    private Long activo;
+    private String password;
+
 
 
 }

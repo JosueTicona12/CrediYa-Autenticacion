@@ -1,60 +1,129 @@
 package co.com.autenticacion.api;
 
+import co.com.autenticacion.api.config.UsuarioPath;
+import co.com.autenticacion.model.usuario.Usuario;
+import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
-@WebFluxTest
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDate;
+import static org.mockito.Mockito.when;
+
+@WebFluxTest(controllers = {RouterRest.class, UsuarioHandler.class})
+@ContextConfiguration(classes = {
+        RouterRest.class,
+        UsuarioHandler.class,
+        RouterRestTest.TestBeans.class
+})
 class RouterRestTest {
 
+    @MockitoBean
+    UsuarioUseCase usuarioUseCase; // lo requiere el Handler
+
     @Autowired
-    private WebTestClient webTestClient;
+    WebTestClient webTestClient;
+
+    static class TestBeans {
+        @Bean
+        UsuarioPath usuarioPath() {
+            var p = new UsuarioPath();
+            p.setUsuarios("/api/v1/usuarios");
+            p.setUsuariosById("/api/v1/usuarios/{id}");
+            return p;
+        }
+    }
+
+    static final Usuario U1 = Usuario.builder()
+            .id(1L).nombres("Juan").apellidos("Perez").numDocumento("73657869")
+            .nacimiento(LocalDate.of(1995,6,15)).direccion("Calle 123")
+            .telefono("999999999").email("juan@test.com").salario(3500)
+            .rolId(1L).activo(1L).build();
+
+    static final Usuario U2 = Usuario.builder()
+            .id(2L).nombres("Marta").apellidos("Diaz").numDocumento("74561234")
+            .nacimiento(LocalDate.of(1993,3,10)).direccion("Av 456")
+            .telefono("911111111").email("marta@test.com").salario(4200)
+            .rolId(1L).activo(1L).build();
+
 
     @Test
-    void testListenGETUseCase() {
+    void getAllUsuarios_ok() {
+        when(usuarioUseCase.getAllUsers()).thenReturn(Flux.just(U1, U2));
+
         webTestClient.get()
-                .uri("/api/usecase/path")
+                .uri("/api/v1/usuarios")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectBodyList(Usuario.class)
+                .hasSize(2)
+                .value(list -> Assertions.assertThat(list.get(0).getId()).isEqualTo(1L));
     }
 
     @Test
-    void testListenGETOtherUseCase() {
+    void getUsuarioById_ok() {
+        when(usuarioUseCase.getUserById(1L)).thenReturn(Mono.just(U1));
+
         webTestClient.get()
-                .uri("/api/otherusercase/path")
-                .accept(MediaType.APPLICATION_JSON)
+                .uri("/api/v1/usuarios/1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectBody(Usuario.class)
+                .value(u -> Assertions.assertThat(u.getEmail()).isEqualTo("juan@test.com"));
     }
 
     @Test
-    void testListenPOSTUseCase() {
+    void postSaveUsuario_ok() {
+        when(usuarioUseCase.saveUser(ArgumentMatchers.any(Usuario.class))).thenReturn(Mono.just(U1));
+
         webTestClient.post()
-                .uri("/api/usecase/otherpath")
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("")
+                .uri("/api/v1/usuarios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(U1)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(200) // o el que uses en tu SuccessResponse
+                .jsonPath("$.message").isNotEmpty();
+    }
+
+    @Test
+    void putUpdateUsuario_ok() {
+        Usuario cambios = U1.toBuilder().apellidos("Pérez Gómez").salario(5000).build();
+        when(usuarioUseCase.updateUser(ArgumentMatchers.any(Usuario.class), ArgumentMatchers.eq(1L)))
+                .thenReturn(Mono.just(cambios));
+
+        webTestClient.put()
+                .uri("/api/v1/usuarios/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cambios)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(200)
+                .jsonPath("$.message").value(msg -> Assertions.assertThat(msg).asString().isNotBlank());
+    }
+
+    @Test
+    void deleteUsuario_noContent() {
+        when(usuarioUseCase.deleteUser(1L)).thenReturn(Mono.empty());
+
+        webTestClient.delete()
+                .uri("/api/v1/usuarios/1")
+                .exchange()
+                .expectStatus().isNoContent();
     }
 }

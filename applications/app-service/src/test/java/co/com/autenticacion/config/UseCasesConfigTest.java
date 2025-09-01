@@ -1,6 +1,9 @@
 package co.com.autenticacion.config;
 
+import co.com.autenticacion.model.usuario.gateways.UsuarioRepository;
+import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,18 +14,12 @@ public class UseCasesConfigTest {
 
     @Test
     void testUseCaseBeansExist() {
-        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class)) {
-            String[] beanNames = context.getBeanDefinitionNames();
+        try (AnnotationConfigApplicationContext context =
+                     new AnnotationConfigApplicationContext(TestConfig.class)) {
 
-            boolean useCaseBeanFound = false;
-            for (String beanName : beanNames) {
-                if (beanName.endsWith("UseCase")) {
-                    useCaseBeanFound = true;
-                    break;
-                }
-            }
 
-            assertTrue(useCaseBeanFound, "No beans ending with 'Use Case' were found");
+            UsuarioUseCase uc = context.getBean(UsuarioUseCase.class);
+            assertTrue(uc != null, "UsuarioUseCase no fue creado");
         }
     }
 
@@ -31,14 +28,9 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
-        }
-    }
+        public UsuarioRepository usuarioRepository() {
 
-    static class MyUseCase {
-        public String execute() {
-            return "MyUseCase Test";
+            return Mockito.mock(UsuarioRepository.class);
         }
     }
 }
