@@ -20,7 +20,7 @@ public class SolicitudPrestamoRouter {
     @Bean
     @RouterOperation(path = "/api/v1/solicitudes", method = RequestMethod.POST,
             beanClass = SolicitudPrestamoHandler.class, beanMethod = "registrarSolicitud")
-    public RouterFunction<ServerResponse> routerFunction() {
+    public RouterFunction<ServerResponse> routerSolicitud() {
         return route(POST("/api/v1/solicitudes"), handler::registrarSolicitud);
     }
 }

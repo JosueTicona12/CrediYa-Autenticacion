@@ -49,3 +49,5 @@ logging:
 jwt:
   secret: "G7fvdS+3h8JkLmZpS1aUqXy9B!eH@Q#L"
   algorithm: "HS256"
+migration:
+  hash-passwords: false

@@ -41,7 +41,9 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .logout(ServerHttpSecurity.LogoutSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .authorizeExchange(exchanges -> exchanges.anyExchange().authenticated())
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/api/v1/login").permitAll()
+                        .anyExchange().authenticated())
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }

@@ -35,7 +35,7 @@ public class UsuarioHandler {
                 .flatMap(auth -> {
                     boolean hasRole = auth.getAuthorities().stream()
                             .map(org.springframework.security.core.GrantedAuthority::getAuthority)
-                            .anyMatch(r -> r.equals("ADMIN") || r.equals("ASESOR"));
+                            .anyMatch(r -> r.equals("1") || r.equals("ADMINISTRADOR"));
                     if (!hasRole) {
                         return ServerResponse.status(HttpStatus.FORBIDDEN).build();
                     }

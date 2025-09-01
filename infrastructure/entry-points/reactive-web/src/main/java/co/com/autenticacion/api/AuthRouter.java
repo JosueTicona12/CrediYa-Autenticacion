@@ -17,8 +17,8 @@ public class AuthRouter {
     private final AuthHandler authHandler;
 
     @Bean
-    @RouterOperation(path = "/login", method = RequestMethod.POST, beanClass = AuthHandler.class, beanMethod = "login")
+    @RouterOperation(path = "/api/v1/login", method = RequestMethod.POST, beanClass = AuthHandler.class, beanMethod = "login")
     public RouterFunction<ServerResponse> authRoutes() {
-        return route(POST("/login"), authHandler::login);
+        return route(POST("/api/v1/login"), authHandler::login);
     }
 }

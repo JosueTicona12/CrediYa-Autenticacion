@@ -15,14 +15,14 @@ import java.util.List;
 @Component
 public class JwtUtil {
     private final SecretKey key;
-    private final long expirationMillis;
+    //private final long expirationMillis;
     private final SignatureAlgorithm algorithm;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-                   @Value("${jwt.expiration}") long expirationMillis,
+                   //@Value("${jwt.expiration}") long expirationMillis,
                    @Value("${jwt.algorithm}") String algorithm) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.expirationMillis = expirationMillis;
+        //this.expirationMillis = expirationMillis;
         this.algorithm = SignatureAlgorithm.forName(algorithm);
     }
 
@@ -31,7 +31,7 @@ public class JwtUtil {
                 .setSubject(subject)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                //.setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(key, algorithm)
                 .compact();
     }

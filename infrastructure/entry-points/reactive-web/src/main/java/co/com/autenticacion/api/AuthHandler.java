@@ -1,9 +1,12 @@
 package co.com.autenticacion.api;
 
+import co.com.autenticacion.api.config.ErrorResponse;
 import co.com.autenticacion.jwtsigner.util.JwtUtil;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.login.LoginUseCase;
 
+import co.com.autenticacion.usecase.login.utils.LoginEnum;
+import exceptions.AuthExceptions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -24,19 +27,43 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthHandler {
+
     private final LoginUseCase loginUseCase;
 
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public Mono<ServerResponse> login(ServerRequest request) {
+        log.trace(LoginEnum.LOGIN_REQUEST.getMessage());
         return request.bodyToMono(LoginRequest.class)
                 .flatMap(auth -> loginUseCase.findByEmail(auth.getEmail())
-                        .flatMap(usuario -> validarPasswordYGenerarToken(auth.getPassword(), usuario))
-                        .switchIfEmpty(ServerResponse.status(HttpStatus.UNAUTHORIZED).build()));
+                        .flatMap(usuario -> validarPasswordYGenerarToken(auth.getPassword(), usuario)))
+                .onErrorResume(AuthExceptions.InvalidCredentialsException.class, e -> {
+                    log.warn(LoginEnum.INVALID_CREDENTIALS.getMessage());
+                    return ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(ErrorResponse.builder()
+                                    .status(HttpStatus.UNAUTHORIZED.value())
+                                    .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                                    .message(e.getMessage())
+                                    .path(request.path())
+                                    .build());
+                })
+                .onErrorResume(e -> {
+                    log.error(LoginEnum.ERROR_LOGIN.getMessage(), e);
+                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(ErrorResponse.builder()
+                                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                    .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                                    .message("Error interno al procesar la autenticación")
+                                    .path(request.path())
+                                    .build());
+                });
     }
 
     private Mono<ServerResponse> validarPasswordYGenerarToken(String rawPassword, Usuario usuario) {
+        log.trace(LoginEnum.TOKEN_GENERATED.getMessage());
         if (usuario.getPassword() != null && passwordEncoder.matches(rawPassword, usuario.getPassword())) {
             String token = jwtUtil.generateToken(
                     usuario.getEmail(),
@@ -45,7 +72,8 @@ public class AuthHandler {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(new TokenResponse(token));
         }
-        return ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
+        log.warn(LoginEnum.INVALID_CREDENTIALS.getMessage());
+        return Mono.error(new AuthExceptions.InvalidCredentialsException());
     }
 
     @Data
