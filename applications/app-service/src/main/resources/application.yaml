@@ -18,7 +18,6 @@ spring:
     driverClassName: "org.h2.Driver"
   jpa:
     databasePlatform: "org.hibernate.dialect.H2Dialect"
-
 management:
   endpoints:
     web:
@@ -30,12 +29,10 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
-
 routes:
   paths:
     usuarios: "/api/v1/usuarios"
     usuariosById: "/api/v1/usuarios/{id}"
-
 adapters:
   r2dbc:
     host: "localhost"
@@ -44,9 +41,8 @@ adapters:
     schema: "crediya_auth"
     username: "postgres"
     password: "73657869"
-
 logging:
   level:
-    root: INFO
-    co.com.autenticacion: TRACE
-    org.springframework.r2dbc: DEBUG
+    root: "INFO"
+    co.com.autenticacion: "TRACE"
+    org.springframework.r2dbc: "DEBUG"

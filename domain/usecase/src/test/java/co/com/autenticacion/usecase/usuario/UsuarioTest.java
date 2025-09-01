@@ -50,8 +50,6 @@ class UsuarioTest {
                 .build();
     }
 
-    // -------- saveUser --------
-
     @Test
     void saveUser_ok() {
         // email normalizado y documento trim
@@ -185,8 +183,6 @@ class UsuarioTest {
         verifyNoMoreInteractions(usuarioRepository);
     }
 
-    // -------- getUserById --------
-
     @Test
     void getUserById_ok() {
         when(usuarioRepository.findById(1L)).thenReturn(Mono.just(usuarioBase));
@@ -219,8 +215,6 @@ class UsuarioTest {
         verify(usuarioRepository).findById(77L);
         verifyNoMoreInteractions(usuarioRepository);
     }
-
-    // -------- deleteUser (soft delete) --------
 
     @Test
     void deleteUser_okSoftDelete() {
@@ -263,9 +257,6 @@ class UsuarioTest {
         verify(usuarioRepository).findById(55L);
         verifyNoMoreInteractions(usuarioRepository);
     }
-
-    // -------- findByEmail --------
-
     @Test
     void findByEmail_ok() {
         when(usuarioRepository.findByEmail("a@b.com")).thenReturn(Mono.just(usuarioBase));
@@ -289,8 +280,6 @@ class UsuarioTest {
         verify(usuarioRepository).findByEmail("x@y.com");
         verifyNoMoreInteractions(usuarioRepository);
     }
-
-    // -------- findByNumDoc --------
 
     @Test
     void findByNumDoc_okActivo() {
