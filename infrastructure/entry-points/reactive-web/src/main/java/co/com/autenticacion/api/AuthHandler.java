@@ -1,9 +1,9 @@
 package co.com.autenticacion.api;
 
+import co.com.autenticacion.jwtsigner.util.JwtUtil;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.login.LoginUseCase;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import javax.crypto.SecretKey;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -26,9 +26,8 @@ import javax.crypto.SecretKey;
 public class AuthHandler {
     private final LoginUseCase loginUseCase;
 
+    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final SecretKey secretKey = Keys.hmacShaKeyFor("very-secret-key-very-secret-key".getBytes());
-
 
     public Mono<ServerResponse> login(ServerRequest request) {
         return request.bodyToMono(LoginRequest.class)
@@ -39,11 +38,9 @@ public class AuthHandler {
 
     private Mono<ServerResponse> validarPasswordYGenerarToken(String rawPassword, Usuario usuario) {
         if (usuario.getPassword() != null && passwordEncoder.matches(rawPassword, usuario.getPassword())) {
-            String token = Jwts.builder()
-                    .setSubject(usuario.getEmail())
-                    .claim("rol", usuario.getRolId())
-                    .signWith(secretKey)
-                    .compact();
+            String token = jwtUtil.generateToken(
+                    usuario.getEmail(),
+                    List.of(String.valueOf(usuario.getRolId())));
             return ServerResponse.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(new TokenResponse(token));

@@ -46,3 +46,6 @@ logging:
     root: "INFO"
     co.com.autenticacion: "TRACE"
     org.springframework.r2dbc: "DEBUG"
+jwt:
+  secret: "G7fvdS+3h8JkLmZpS1aUqXy9B!eH@Q#L"
+  algorithm: "HS256"
