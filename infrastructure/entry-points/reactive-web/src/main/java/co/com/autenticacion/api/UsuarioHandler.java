@@ -30,17 +30,27 @@ public class UsuarioHandler {
     public Mono<ServerResponse> listenSaveUsuario(ServerRequest request) {
         log.trace("Handler - Recibida petición de guardado para usuario");
 
-        return request.bodyToMono(Usuario.class)
-                .flatMap(usuarioUseCase::saveUser)
-                .flatMap(u -> {
-                    SuccessResponse response = SuccessResponse.builder()
-                            .timestamp(LocalDateTime.now())
-                            .status(200)
-                            .message("Usuario creado correctamente")
-                            .build();
-                    return ServerResponse.status(200)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(response);
+        return request.principal()
+                .cast(org.springframework.security.core.Authentication.class)
+                .flatMap(auth -> {
+                    boolean hasRole = auth.getAuthorities().stream()
+                            .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                            .anyMatch(r -> r.equals("ADMIN") || r.equals("ASESOR"));
+                    if (!hasRole) {
+                        return ServerResponse.status(HttpStatus.FORBIDDEN).build();
+                    }
+                    return request.bodyToMono(Usuario.class)
+                            .flatMap(usuarioUseCase::saveUser)
+                            .flatMap(u -> {
+                                SuccessResponse response = SuccessResponse.builder()
+                                        .timestamp(LocalDateTime.now())
+                                        .status(200)
+                                        .message("Usuario creado correctamente")
+                                        .build();
+                                return ServerResponse.status(200)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .bodyValue(response);
+                            });
                 });
     }
 
