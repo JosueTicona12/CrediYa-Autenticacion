@@ -21,6 +21,8 @@ public class Usuario {
     private Integer salario;
     private Long rolId;
     private Long activo;
+    private String password;
+
 
 
 }

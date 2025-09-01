@@ -20,10 +20,10 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import static org.mockito.Mockito.when;
 
-@WebFluxTest(controllers = {RouterRest.class, Handler.class})
+@WebFluxTest(controllers = {RouterRest.class, UsuarioHandler.class})
 @ContextConfiguration(classes = {
         RouterRest.class,
-        Handler.class,
+        UsuarioHandler.class,
         RouterRestTest.TestBeans.class
 })
 class RouterRestTest {

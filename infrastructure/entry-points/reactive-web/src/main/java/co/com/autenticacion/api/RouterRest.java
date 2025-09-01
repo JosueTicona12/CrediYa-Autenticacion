@@ -30,7 +30,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class RouterRest {
 
     private final UsuarioPath usuarioPath;
-    private final Handler usuarioHandler;
+    private final UsuarioHandler usuarioHandler;
     public static final String USUARIOS_BY_DOCUMENTO = "/api/v1/usuarios/by-documento/{numDocumento}";
 
     @Bean
@@ -38,7 +38,7 @@ public class RouterRest {
             @RouterOperation(
                     path = "/usuarios",
                     method = RequestMethod.POST,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenSaveUsuario",
                     operation = @Operation(
                             operationId = "saveUsuario",
@@ -58,7 +58,7 @@ public class RouterRest {
             @RouterOperation(
                     path = "/usuarios/{id}",
                     method = RequestMethod.PUT,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenUpdateUsuario",
                     operation = @Operation(
                             operationId = "updateUsuario",
@@ -87,7 +87,7 @@ public class RouterRest {
             @RouterOperation(
                     path = "/usuarios/{id}",
                     method = RequestMethod.DELETE,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenDeleteUsuario",
                     operation = @Operation(
                             operationId = "deleteUsuario",
@@ -107,7 +107,7 @@ public class RouterRest {
             @RouterOperation(
                     path = "/usuarios",
                     method = RequestMethod.GET,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenGetAllUsuarios",
                     operation = @Operation(
                             operationId = "getAllUsuarios",
@@ -122,7 +122,7 @@ public class RouterRest {
             @RouterOperation(
                     path = "/usuarios/{id}",
                     method = RequestMethod.GET,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenUsuarioById",
                     operation = @Operation(
                             operationId = "getUsuarioById",
@@ -149,7 +149,7 @@ public class RouterRest {
             @RouterOperation(
                     path = USUARIOS_BY_DOCUMENTO,
                     method = RequestMethod.GET,
-                    beanClass = Handler.class,
+                    beanClass = UsuarioHandler.class,
                     beanMethod = "listenUsuarioByDocumento",
                     operation = @Operation(
                             operationId = "getUsuarioByDocumento",
@@ -171,12 +171,12 @@ public class RouterRest {
     )
     })
 
-    public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST(usuarioPath.getUsuarios()), usuarioHandler::listenSaveUsuario)
-                .andRoute(PUT(usuarioPath.getUsuariosById()), usuarioHandler::listenUpdateUsuario)
-                .andRoute(DELETE(usuarioPath.getUsuariosById()), usuarioHandler::listenDeleteUsuario)
-                .andRoute(GET(usuarioPath.getUsuarios()), usuarioHandler::listenGetAllUsuarios)
-                .andRoute(GET(usuarioPath.getUsuariosById()), usuarioHandler::listenUsuarioById)
-                .andRoute(GET(USUARIOS_BY_DOCUMENTO), usuarioHandler::listenUsuarioByNumDoc);
+    public RouterFunction<ServerResponse> routerFunction(UsuarioHandler usuarioHandler) {
+        return route(POST(usuarioPath.getUsuarios()), this.usuarioHandler::listenSaveUsuario)
+                .andRoute(PUT(usuarioPath.getUsuariosById()), this.usuarioHandler::listenUpdateUsuario)
+                .andRoute(DELETE(usuarioPath.getUsuariosById()), this.usuarioHandler::listenDeleteUsuario)
+                .andRoute(GET(usuarioPath.getUsuarios()), this.usuarioHandler::listenGetAllUsuarios)
+                .andRoute(GET(usuarioPath.getUsuariosById()), this.usuarioHandler::listenUsuarioById)
+                .andRoute(GET(USUARIOS_BY_DOCUMENTO), this.usuarioHandler::listenUsuarioByNumDoc);
     }
 }

@@ -23,7 +23,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class Handler {
+public class UsuarioHandler {
 
     private final UsuarioUseCase usuarioUseCase;
 

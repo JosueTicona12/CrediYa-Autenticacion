@@ -1,6 +1,6 @@
 package co.com.autenticacion.api.config;
 
-import co.com.autenticacion.api.Handler;
+import co.com.autenticacion.api.UsuarioHandler;
 import co.com.autenticacion.api.RouterRest;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
@@ -19,7 +19,7 @@ import java.time.LocalDate;
 
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+@ContextConfiguration(classes = {RouterRest.class, UsuarioHandler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class, ConfigTest.TestBeans.class})
 class ConfigTest {

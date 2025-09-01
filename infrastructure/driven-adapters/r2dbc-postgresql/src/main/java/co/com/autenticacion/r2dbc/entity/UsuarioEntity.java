@@ -33,6 +33,9 @@ public class UsuarioEntity {
 
     private String direccion;
 
+    @Column("password")
+    private String password;
+
     private String telefono;
 
     private String email;

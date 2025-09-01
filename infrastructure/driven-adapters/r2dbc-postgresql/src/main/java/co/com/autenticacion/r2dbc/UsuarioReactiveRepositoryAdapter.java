@@ -3,6 +3,7 @@ package co.com.autenticacion.r2dbc;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.model.usuario.gateways.UsuarioRepository;
 import co.com.autenticacion.r2dbc.entity.UsuarioEntity;
+import co.com.autenticacion.r2dbc.helper.PasswordHasher;
 import co.com.autenticacion.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -24,6 +25,9 @@ public class UsuarioReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<Usuario> save(Usuario usuario) {
+        if (usuario.getPassword() != null && !usuario.getPassword().isBlank()) {
+            usuario.setPassword(PasswordHasher.hash(usuario.getPassword()));
+        }
         return super.save(usuario);
     }
 
