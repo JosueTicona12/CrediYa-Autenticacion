@@ -1,6 +1,8 @@
 package co.com.autenticacion.api;
 
 import co.com.autenticacion.api.config.UsuarioPath;
+import co.com.autenticacion.api.handler.UsuarioHandler;
+import co.com.autenticacion.api.router.RouterRest;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import org.assertj.core.api.Assertions;

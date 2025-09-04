@@ -1,6 +1,6 @@
-package co.com.autenticacion.api;
+package co.com.autenticacion.api.handler;
 
-import co.com.autenticacion.api.dto.SolicitudPrestamoRequest;
+import co.com.autenticacion.api.dto.SolicitudPrestamoRequestDTO;
 import co.com.autenticacion.api.helper.SolicitudPrestamoLogEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ public class SolicitudPrestamoHandler {
         log.trace(SolicitudPrestamoLogEnum.REGISTRAR_SOLICITUD.getMessage());
         String authenticatedClientId = request.headers().firstHeader("X-Client-Id");
 
-        return request.bodyToMono(SolicitudPrestamoRequest.class)
+        return request.bodyToMono(SolicitudPrestamoRequestDTO.class)
                 .flatMap(body -> {
                     if (authenticatedClientId == null || !authenticatedClientId.equals(body.getClientId())) {
                         return ServerResponse.status(HttpStatus.FORBIDDEN).build();

@@ -1,6 +1,7 @@
-package co.com.autenticacion.api;
+package co.com.autenticacion.api.router;
 
 
+import co.com.autenticacion.api.handler.SolicitudPrestamoHandler;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.context.annotation.Bean;

@@ -12,6 +12,7 @@ public enum UsuarioLogEnum {
     EMAIL_REQUIRED("El correo electronico es obligatorio"),
     SALARY_INVALID("El salario base esta vacio o fuera de rango numerico"),
     NUMDOC_REQUIRED("El número de documento es obligatorio"),
+    ADMIN_ROLE_REQUIRED("El rol del usuario debe ser administrador"),
     ID_REQUIRED("El id no puede ser nulo"),
     SAVE_USER("UseCase - Guardando usuario"),
     SAVE_USER_SUCCESS("Usuario guardado con éxito"),

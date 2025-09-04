@@ -1,7 +1,7 @@
 package co.com.autenticacion.api.config;
 
-import co.com.autenticacion.api.UsuarioHandler;
-import co.com.autenticacion.api.RouterRest;
+import co.com.autenticacion.api.handler.UsuarioHandler;
+import co.com.autenticacion.api.router.RouterRest;
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.usecase.usuario.UsuarioUseCase;
 import org.junit.jupiter.api.Test;

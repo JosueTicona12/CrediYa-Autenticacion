@@ -43,7 +43,6 @@ public class UsuarioUseCase {
             log.warning(NUMDOC_REQUIRED.getMessage());
             return Mono.error(new UsuarioValidationException(NUMDOC_REQUIRED.getMessage()));
         }
-        usuario.setActivo(1L);
         final String email = usuario.getEmail().trim().toLowerCase();
         final String numDocumento = usuario.getNumDocumento().trim();
         usuario.setEmail(email);

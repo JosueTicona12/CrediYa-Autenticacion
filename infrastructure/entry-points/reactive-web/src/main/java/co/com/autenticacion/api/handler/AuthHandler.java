@@ -1,4 +1,4 @@
-package co.com.autenticacion.api;
+package co.com.autenticacion.api.handler;
 
 import co.com.autenticacion.api.config.ErrorResponse;
 import co.com.autenticacion.jwtsigner.util.JwtUtil;

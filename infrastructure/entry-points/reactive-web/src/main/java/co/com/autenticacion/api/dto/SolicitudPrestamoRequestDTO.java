@@ -3,6 +3,6 @@ package co.com.autenticacion.api.dto;
 import lombok.Data;
 
 @Data
-public class SolicitudPrestamoRequest {
+public class SolicitudPrestamoRequestDTO {
     private String clientId;
 }

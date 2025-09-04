@@ -1,4 +1,4 @@
-package co.com.autenticacion.api;
+package co.com.autenticacion.api.handler;
 
 import co.com.autenticacion.api.config.ErrorResponse;
 import co.com.autenticacion.api.config.SuccessResponse;
@@ -38,9 +38,11 @@ public class UsuarioHandler {
                 .flatMap(auth -> {
                     boolean hasRole = auth.getAuthorities().stream()
                             .map(org.springframework.security.core.GrantedAuthority::getAuthority)
-                            .anyMatch(r -> r.equals("1") || r.equals("ADMINISTRADOR"));
+                            .anyMatch(r -> r.equals("1"));
                     if (!hasRole) {
-                        return ServerResponse.status(HttpStatus.FORBIDDEN).build();
+                        log.warn(ADMIN_ROLE_REQUIRED.getMessage());
+                        return buildErrorResponse(HttpStatus.FORBIDDEN,
+                                ADMIN_ROLE_REQUIRED.getMessage(), request);
                     }
                     return request.bodyToMono(Usuario.class)
                             .flatMap(usuarioUseCase::saveUser)

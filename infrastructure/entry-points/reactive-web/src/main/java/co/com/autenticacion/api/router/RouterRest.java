@@ -1,5 +1,6 @@
-package co.com.autenticacion.api;
+package co.com.autenticacion.api.router;
 
+import co.com.autenticacion.api.handler.UsuarioHandler;
 import co.com.autenticacion.api.config.UsuarioPath;
 import co.com.autenticacion.model.usuario.Usuario;
 import io.swagger.v3.oas.annotations.Operation;
