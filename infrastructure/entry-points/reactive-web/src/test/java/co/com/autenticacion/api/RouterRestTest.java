@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -21,6 +24,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.csrf;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication;
+
 
 @WebFluxTest(controllers = {RouterRest.class, UsuarioHandler.class})
 @ContextConfiguration(classes = {
@@ -43,6 +49,12 @@ class RouterRestTest {
             p.setUsuarios("/api/v1/usuarios");
             p.setUsuariosById("/api/v1/usuarios/{id}");
             return p;
+        }
+        @Bean
+        SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+            return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
+                    .build();
         }
     }
 
@@ -89,7 +101,9 @@ class RouterRestTest {
     void postSaveUsuario_ok() {
         when(usuarioUseCase.saveUser(ArgumentMatchers.any(Usuario.class))).thenReturn(Mono.just(U1));
 
-        webTestClient.post()
+        webTestClient.mutateWith(csrf())
+                .mutateWith(mockAuthentication(new TestingAuthenticationToken("admin", "pass", "1")))
+                .post()
                 .uri("/api/v1/usuarios")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(U1)
@@ -107,7 +121,7 @@ class RouterRestTest {
         when(usuarioUseCase.updateUser(ArgumentMatchers.any(Usuario.class), ArgumentMatchers.eq(1L)))
                 .thenReturn(Mono.just(cambios));
 
-        webTestClient.put()
+        webTestClient.mutateWith(csrf()).put()
                 .uri("/api/v1/usuarios/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(cambios)
@@ -123,7 +137,7 @@ class RouterRestTest {
     void deleteUsuario_noContent() {
         when(usuarioUseCase.deleteUser(1L)).thenReturn(Mono.empty());
 
-        webTestClient.delete()
+        webTestClient.mutateWith(csrf()).delete()
                 .uri("/api/v1/usuarios/1")
                 .exchange()
                 .expectStatus().isNoContent();

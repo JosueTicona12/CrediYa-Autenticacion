@@ -2,10 +2,7 @@ package co.com.autenticacion.usecase.usuario;
 
 import co.com.autenticacion.model.usuario.Usuario;
 import co.com.autenticacion.model.usuario.gateways.UsuarioRepository;
-import exceptions.UsuarioDeleteException;
-import exceptions.UsuarioException;
-import exceptions.UsuarioNotFoundException;
-import exceptions.UsuarioValidationException;
+import exceptions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,6 +99,17 @@ class UsuarioTest {
         verifyNoInteractions(usuarioRepository);
     }
 
+    @Test
+    void saveUser_errorEmailDuplicado() {
+        when(usuarioRepository.findByEmail("juan@test.com")).thenReturn(Mono.just(usuarioBase));
+
+        StepVerifier.create(useCase.saveUser(usuarioBase))
+                .expectError(UsuarioException.class)
+                .verify();
+
+        verify(usuarioRepository).findByEmail("juan@test.com");
+        verifyNoMoreInteractions(usuarioRepository);
+    }
 
     @Test
     void updateUser_ok() {
@@ -157,7 +165,19 @@ class UsuarioTest {
         verifyNoMoreInteractions(usuarioRepository);
     }
 
+    @Test
+    void updateUser_errorGuardadoVacio() {
+        when(usuarioRepository.findById(1L)).thenReturn(Mono.just(usuarioBase));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(Mono.empty());
 
+        StepVerifier.create(useCase.updateUser(usuarioBase, 1L))
+                .expectError(UsuarioUpdateException.class)
+                .verify();
+
+        verify(usuarioRepository).findById(1L);
+        verify(usuarioRepository).save(any(Usuario.class));
+        verifyNoMoreInteractions(usuarioRepository);
+    }
 
     @Test
     void getAllUsers_ok() {
@@ -317,6 +337,20 @@ class UsuarioTest {
                 .verify();
 
         verify(usuarioRepository).findByNumDocumento("222");
+        verifyNoMoreInteractions(usuarioRepository);
+    }
+
+    @Test
+    void deleteUser_errorAlGuardar() {
+        when(usuarioRepository.findById(1L)).thenReturn(Mono.just(usuarioBase));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(Mono.error(new RuntimeException("db error")));
+
+        StepVerifier.create(useCase.deleteUser(1L))
+                .expectError(UsuarioDeleteException.class)
+                .verify();
+
+        verify(usuarioRepository).findById(1L);
+        verify(usuarioRepository).save(any(Usuario.class));
         verifyNoMoreInteractions(usuarioRepository);
     }
 }

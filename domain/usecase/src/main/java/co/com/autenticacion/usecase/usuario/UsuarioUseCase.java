@@ -52,16 +52,13 @@ public class UsuarioUseCase {
                 .flatMap(existing -> Mono.<Usuario>error(
                         new UsuarioException("Ya existe un usuario registrado con el email: " + email)
                 ))
-                .switchIfEmpty(
-                        usuarioRepository.findByNumDocumento(numDocumento)
-                                .flatMap(existing -> Mono.<Usuario>error(
+                .switchIfEmpty(Mono.defer(() ->
+                                usuarioRepository.findByNumDocumento(numDocumento)
+                                    .flatMap(existing -> Mono.<Usuario>error(
                                         new UsuarioException("Ya existe un usuario registrado con el documento: " + numDocumento)
                                 ))
-                                .switchIfEmpty(
-                                        // 3) Si tampoco existe el documento → guardar
-                                        usuarioRepository.save(usuario)
-                                )
-                )
+                                        .switchIfEmpty(usuarioRepository.save(usuario))
+                ))
                 .doOnSuccess(u -> log.info(SAVE_USER_SUCCESS.getMessage()))
                 .doOnError(e -> log.severe(ERROR_SAVE_USER.getMessage() + e.getMessage()));
     }

@@ -10,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -64,6 +66,11 @@ class ConfigTest {
             p.setUsuariosById("/api/v1/usuarios/{id}");
             return p;
         }
+        @Bean
+        SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+            return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
+                    .build();
+        }
     }
-
 }
