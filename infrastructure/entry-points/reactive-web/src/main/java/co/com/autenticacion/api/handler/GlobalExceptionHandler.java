@@ -1,5 +1,6 @@
-package co.com.autenticacion.api.config;
+package co.com.autenticacion.api.handler;
 
+import co.com.autenticacion.api.config.ErrorResponse;
 import exceptions.UsuarioDeleteException;
 import exceptions.UsuarioNotFoundException;
 import exceptions.UsuarioUpdateException;

@@ -32,12 +32,14 @@ public class RouterRest {
 
     private final UsuarioPath usuarioPath;
     private final UsuarioHandler usuarioHandler;
-    public static final String USUARIOS_BY_DOCUMENTO = "/api/v1/usuarios/by-documento/{numDocumento}";
+    public static final String USUARIOS = "/api/v1/usuarios";
+    public static final String USUARIOS_BY_ID = USUARIOS + "/{id}";
+    public static final String USUARIOS_BY_DOCUMENTO = USUARIOS + "/by-documento/{numDocumento}";
 
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/usuarios",
+                    path = USUARIOS,
                     method = RequestMethod.POST,
                     beanClass = UsuarioHandler.class,
                     beanMethod = "listenSaveUsuario",
@@ -57,7 +59,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/usuarios/{id}",
+                    path = USUARIOS_BY_ID,
                     method = RequestMethod.PUT,
                     beanClass = UsuarioHandler.class,
                     beanMethod = "listenUpdateUsuario",
@@ -86,7 +88,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/usuarios/{id}",
+                    path = USUARIOS_BY_ID,
                     method = RequestMethod.DELETE,
                     beanClass = UsuarioHandler.class,
                     beanMethod = "listenDeleteUsuario",
@@ -106,7 +108,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/usuarios",
+                    path = USUARIOS,
                     method = RequestMethod.GET,
                     beanClass = UsuarioHandler.class,
                     beanMethod = "listenGetAllUsuarios",
@@ -121,7 +123,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/usuarios/{id}",
+                    path = USUARIOS_BY_ID,
                     method = RequestMethod.GET,
                     beanClass = UsuarioHandler.class,
                     beanMethod = "listenUsuarioById",

@@ -77,14 +77,14 @@ public class AuthHandler {
     }
 
     @Data
-    private static class LoginRequest {
+    public static class LoginRequest {
         private String email;
         private String password;
     }
 
     @AllArgsConstructor
     @Getter
-    private static class TokenResponse {
+    public static class TokenResponse {
         private final String token;
     }
 }
