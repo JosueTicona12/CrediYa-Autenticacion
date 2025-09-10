@@ -1,5 +1,6 @@
 package co.com.autenticacion.api.router;
 
+import co.com.autenticacion.api.config.LoginPath;
 import co.com.autenticacion.api.handler.AuthHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,10 +22,12 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @RequiredArgsConstructor
 public class AuthRouter {
     private final AuthHandler authHandler;
+    private final LoginPath loginPath;
+    public static final String LOGIN = "/api/v1/login";
 
     @Bean
     @RouterOperation(
-            path = "/api/v1/login",
+            path = LOGIN,
             method = RequestMethod.POST,
             beanClass = AuthHandler.class,
             beanMethod = "login",
@@ -45,6 +48,6 @@ public class AuthRouter {
             )
     )
     public RouterFunction<ServerResponse> authRoutes() {
-        return route(POST("/api/v1/login"), authHandler::login);
+        return route(POST(LOGIN), authHandler::login);
     }
 }

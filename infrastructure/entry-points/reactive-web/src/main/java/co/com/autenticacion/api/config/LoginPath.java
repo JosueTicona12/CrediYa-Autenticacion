@@ -1,0 +1,12 @@
+package co.com.autenticacion.api.config;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@Setter
+@Getter
+@ConfigurationProperties (prefix = "routes.paths")
+public class LoginPath {
+    private String login;
+}

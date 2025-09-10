@@ -13,7 +13,8 @@ plugins {
 	id 'co.com.bancolombia.cleanArchitecture' version "${cleanArchitectureVersion}"
 	id 'org.springframework.boot' version "${springBootVersion}" apply false
 	id 'info.solidsoft.pitest' version "${pitestVersion}" apply false
-	id 'org.sonarqube' version "${sonarVersion}"
+    id 'io.spring.dependency-management' version '1.1.1'
+    id 'org.sonarqube' version "${sonarVersion}"
 	id 'jacoco'
 }
 

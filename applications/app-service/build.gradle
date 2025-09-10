@@ -7,6 +7,9 @@ dependencies {
 	implementation project(':r2dbc-postgresql')
     implementation project(':model')
     implementation project(':usecase')
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'com.nimbusds:nimbus-jose-jwt:9.40' // 9.x estable
     runtimeOnly('org.springframework.boot:spring-boot-devtools')

@@ -17,16 +17,23 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final String GENERIC_ERROR_MESSAGE = "Error interno del servidor";
+
     private Mono<ResponseEntity<ErrorResponse>> buildErrorResponse(
             Exception ex,
             HttpStatus status,
             ServerHttpRequest request
     ) {
+        String message = status.is5xxServerError()
+                ? GENERIC_ERROR_MESSAGE
+                : ex.getMessage();
+
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(ex.getMessage())
+                .message(message)
                 .path(request.getURI().getPath())
                 .build();
 
